@@ -7,15 +7,29 @@ import { PrismaD1 } from "@prisma/adapter-d1";
 import { createPrismaClient } from "@/server/db";
 // Cloudflare
 import { getRequestContext } from "@cloudflare/next-on-pages";
+// Auth
+import { currentUser, auth } from "@clerk/nextjs/server";
 // Types
 import { Env } from "@/server/types";
 // Private Routes
-import books from "./routes/books";
+import todos from "./routes/todos";
 
 const app = new Hono<Env>().basePath("/api/v1");
 
 const authMiddleware = createMiddleware<Env>(async (c, next) => {
-  // c.set("message", "Hono is cool Yeah!!!!");
+  const { userId } = await auth();
+
+  if (!userId) {
+    return c.json("Unauthorized", 401);
+  }
+
+  const user = await currentUser();
+
+  if (!user) {
+    return c.json("User not found", 404);
+  }
+
+  c.set("user", user);
 
   await next();
 });
@@ -38,6 +52,6 @@ export const publicRoutes = app.get("/healthcheck", (c) => {
 export const privateRoutes = app
   .use(authMiddleware)
   .use(databaseMiddleware)
-  .route("/books", books);
+  .route("/todos", todos);
 
 export default app;
