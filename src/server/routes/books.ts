@@ -6,10 +6,10 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 
 const booksRoutes = new Hono<Env>()
-  .get("/", (c) => {
-    const message = c.var.message;
+  .get("/", async (c) => {
+    const users = await c.var.prisma.user.findMany();
 
-    return c.json(`list of books message="${message}"`);
+    return c.json({ users });
   })
   .post(
     "/",

@@ -17,5 +17,5 @@ export default function PostsPage() {
 
   console.log("joe = ", joe.data);
 
-  return <div>Hey Book {data ?? ""}</div>;
+  return <div>Hey Book {JSON.stringify(data)}</div>;
 }

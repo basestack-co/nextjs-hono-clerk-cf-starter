@@ -1,7 +1,10 @@
+// Routes
 import { privateRoutes, publicRoutes } from "@/server";
+// Types
+import { CreatePrismaClient } from "@/server/db";
 
 export type Variables = {
-  message: string;
+  prisma: CreatePrismaClient;
 };
 
 export type Env = {
