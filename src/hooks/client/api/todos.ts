@@ -43,6 +43,19 @@ export const useCreateMutation = createMutationHook<
   CreateTodoInput
 >((data) => client.api.v1.todos.$post({ json: data }));
 
+const $updateById = client.api.v1.todos[":id"].$put;
+export type UpdateTodoByIdResponse = InferResponseType<typeof $updateById>;
+export type UpdateTodoByIdArgs = InferRequestType<
+  typeof $updateById
+>["json"] & { id: string };
+
+export const useUpdateMutation = createMutationHook<
+  UpdateTodoByIdResponse,
+  UpdateTodoByIdArgs
+>(({ id, completed }) =>
+  client.api.v1.todos[":id"].$put({ param: { id }, json: { completed } }),
+);
+
 const $deleteById = client.api.v1.todos[":id"].$delete;
 export type DeleteTodoByIdResponse = InferResponseType<typeof $deleteById>;
 export type DeleteTodoByIdArgs = InferRequestType<typeof $deleteById>["param"];
@@ -50,4 +63,4 @@ export type DeleteTodoByIdArgs = InferRequestType<typeof $deleteById>["param"];
 export const useDeleteMutation = createMutationHook<
   DeleteTodoByIdResponse,
   DeleteTodoByIdArgs
->(({ id }) => client.api.v1.todos.$delete(id));
+>(({ id }) => client.api.v1.todos[":id"].$delete({ param: { id } }));

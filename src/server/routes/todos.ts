@@ -7,20 +7,13 @@ import { zValidator } from "@hono/zod-validator";
 
 const todosRoutes = new Hono<Env>()
   .get("/", async (c) => {
-    const todos = await c.var.prisma.todo.findMany();
-
-    return c.json({ todos });
-  })
-  .get("/:id", async (c) => {
-    const todoId = c.req.param("id");
-
-    const todo = await c.var.prisma.todo.findFirst({
-      where: {
-        id: todoId,
+    const todos = await c.var.prisma.todo.findMany({
+      orderBy: {
+        createdAt: "desc",
       },
     });
 
-    return c.json({ todo }, 200);
+    return c.json({ todos });
   })
   .post(
     "/",
@@ -38,6 +31,39 @@ const todosRoutes = new Hono<Env>()
       const data = c.req.valid("json");
 
       const todo = await c.var.prisma.todo.create({ data });
+
+      return c.json({ todo }, 200);
+    },
+  )
+  .get("/:id", async (c) => {
+    const todoId = c.req.param("id");
+
+    const todo = await c.var.prisma.todo.findFirst({
+      where: {
+        id: todoId,
+      },
+    });
+
+    return c.json({ todo }, 200);
+  })
+  .put(
+    "/:id",
+    zValidator(
+      "json",
+      z.object({
+        completed: z.boolean(),
+      }),
+    ),
+    async (c) => {
+      const todoId = c.req.param("id");
+      const data = c.req.valid("json");
+
+      const todo = await c.var.prisma.todo.update({
+        where: {
+          id: todoId,
+        },
+        data,
+      });
 
       return c.json({ todo }, 200);
     },

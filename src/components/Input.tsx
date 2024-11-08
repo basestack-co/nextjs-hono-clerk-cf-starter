@@ -1,5 +1,5 @@
-import * as React from "react";
-
+import React from "react";
+// Utils
 import { cn } from "@/utils/tailwind";
 
 export interface InputProps

@@ -6,16 +6,15 @@ import { Button } from "@/components/Button";
 import { Card, CardContent } from "@/components/Card";
 import { Checkbox } from "@/components/Checkbox";
 import { Input } from "@/components/Input";
+import { Skeleton } from "@/components/Skeleton";
 // Icons
-import { Trash2 } from "lucide-react";
+import { Trash2, ClipboardList } from "lucide-react";
 // Auth
 import { useAuth } from "@clerk/nextjs";
 // Hooks
 import api from "@/hooks/client/api";
 // Auth
 import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-// Types
-import { CreateTodoInput, useCreateMutation } from "@/hooks/client/api/todos";
 // Utils
 import { v4 as uuidv4 } from "uuid";
 
@@ -26,19 +25,36 @@ export default function Home() {
     enabled: true,
   });
 
-  const [todos, setTodos] = useState<CreateTodoInput[]>([]);
   const [title, setTitle] = useState("");
 
-  const { mutate } = api.todos.useCreateMutation({
-    onSuccess: () => {
-      setTitle("");
-      refetch();
-    },
-  });
+  const { mutate: createTodoMutate, isPending: isCreatePending } =
+    api.todos.useCreateMutation({
+      onSuccess: () => {
+        setTitle("");
+        refetch();
+      },
+    });
+
+  const { mutate: deleteTodoMutate, isPending: isDeletePending } =
+    api.todos.useDeleteMutation({
+      onSuccess: () => {
+        refetch();
+      },
+    });
+
+  const { mutate: updateTodoMutate, isPending: isUpdatePending } =
+    api.todos.useUpdateMutation({
+      onSuccess: () => {
+        refetch();
+      },
+    });
+
+  const isDisabled =
+    isLoading || isCreatePending || isDeletePending || isUpdatePending;
 
   const oAddTodo = useCallback(() => {
     if (title.trim() !== "" && userId) {
-      mutate({
+      createTodoMutate({
         id: uuidv4(),
         userId,
         title,
@@ -46,27 +62,57 @@ export default function Home() {
         completed: false,
       });
     }
-  }, [mutate, userId, title]);
+  }, [createTodoMutate, userId, title]);
 
-  const onToggleTodo = useCallback((id: string) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo,
-      ),
-    );
-  }, []);
+  const onToggleTodo = useCallback(
+    (id: string, completed: boolean) => {
+      updateTodoMutate({ id, completed: !completed });
+    },
+    [updateTodoMutate],
+  );
 
-  const onDeleteTodo = useCallback((id: string) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
-  }, []);
+  const onDeleteTodo = useCallback(
+    (id: string) => {
+      deleteTodoMutate({ id });
+    },
+    [deleteTodoMutate],
+  );
 
   const onRenderContent = useCallback(() => {
     if (isLoading) {
-      return <div>Loading...</div>;
+      return (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-4">
+                  <Skeleton className="h-4 w-4 rounded" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
     }
 
     if (!data?.todos.length) {
-      return <div>There no TODOs</div>;
+      return (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center p-12 pt-6 text-center">
+            <ClipboardList className="mb-4 h-12 w-12 text-gray-400" />
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">
+              No TODOs yet
+            </h3>
+            <p className="text-sm text-gray-600">
+              Add a new TODO to get started. Your tasks will appear here.
+            </p>
+          </CardContent>
+        </Card>
+      );
     }
 
     return (
@@ -78,7 +124,7 @@ export default function Home() {
                 <Checkbox
                   id={`todo-${todo.id}`}
                   checked={todo.completed}
-                  onCheckedChange={() => onToggleTodo(todo.id)}
+                  onCheckedChange={() => onToggleTodo(todo.id, todo.completed)}
                 />
                 <div>
                   <label
@@ -107,7 +153,7 @@ export default function Home() {
         ))}
       </div>
     );
-  }, [isLoading, data]);
+  }, [isLoading, data, onDeleteTodo, onToggleTodo]);
 
   if (!isLoaded || !userId) {
     return null;
@@ -137,9 +183,9 @@ export default function Home() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="flex-grow"
-                disabled={isLoading}
+                disabled={isDisabled}
               />
-              <Button onClick={oAddTodo} disabled={isLoading}>
+              <Button onClick={oAddTodo} disabled={isDisabled}>
                 Add TODO
               </Button>
             </div>
