@@ -21,8 +21,6 @@ export type ClientResponse<T> = {
   json: () => Promise<T>;
 };
 
-type FetchFunction<T> = () => Promise<ClientResponse<T>>;
-
 export function createQueryHook<ResponseType, Variables>(
   queryKey: (variables: Variables) => string[],
   fetchFn: (variables: Variables) => Promise<ClientResponse<ResponseType>>,

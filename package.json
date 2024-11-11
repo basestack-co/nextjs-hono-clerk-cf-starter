@@ -7,19 +7,45 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md,css}\"",
+    "prepare": "husky",
+    "precommit": "yarn format && yarn lint && lint-staged",
+    "commit": "git-cz",
+    "clean": "rm -rf node_modules && rm -rf .next && rm -rf .vercel && rm -rf .wrangler",
+    "postinstall": "npm run prisma:generate",
+    "update:packages": "npx npm-check-updates -i",
     "pages:build": "npx @cloudflare/next-on-pages",
-    "preview": "npm run pages:build && wrangler pages dev",
-    "deploy": "npm run pages:build && wrangler pages deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts"
+    "preview": "npm run pages:build && wrangler pages dev --port 3000",
+    "deploy:remote": "npm run prisma:generate && npm run db:migrate:apply:remote && npm run pages:build",
+    "deploy:local": "npm run prisma:generate && npm run db:migrate:apply:remote && npm run pages:build && wrangler pages deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts",
+    "prisma:generate": "prisma generate --schema=src/server/prisma/schema.prisma",
+    "db:migrate:create": "npx wrangler d1 migrations create demo-hono-next-db $npm_config_file_name",
+    "db:migrate:generate": "prisma migrate diff --from-empty --to-schema-datamodel src/server/prisma/schema.prisma --script --output src/server/migrations/$npm_config_migration_file_name",
+    "db:migrate:apply:local": "npx wrangler d1 migrations apply demo-hono-next-db --local",
+    "db:migrate:apply:remote": "npx wrangler d1 migrations apply demo-hono-next-db --remote"
   },
   "dependencies": {
+    "@auth/d1-adapter": "^1.7.3",
     "@hono/zod-validator": "^0.4.1",
+    "@prisma/adapter-d1": "^5.22.0",
+    "@prisma/client": "^5.22.0",
+    "@radix-ui/react-avatar": "^1.1.1",
+    "@radix-ui/react-checkbox": "^1.1.2",
+    "@radix-ui/react-slot": "^1.1.0",
     "@tanstack/react-query": "^5.59.19",
     "@tanstack/react-query-next-experimental": "^5.59.19",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "hono": "^4.6.9",
+    "lucide-react": "^0.454.0",
     "next": "14.2.5",
+    "next-auth": "^5.0.0-beta.25",
     "react": "^18",
     "react-dom": "^18",
+    "tailwind-merge": "^2.5.4",
+    "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.0.2",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -28,14 +54,39 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "eslint-plugin-next-on-pages": "^1.13.5",
+    "husky": "^9.1.6",
+    "is-ci": "^3.0.1",
+    "lint-staged": "^15.2.10",
     "postcss": "^8",
     "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "prisma": "^5.22.0",
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
     "vercel": "^37.14.0",
     "wrangler": "^3.84.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged && tsc"
+    }
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,json,css,md}": [
+      "prettier --write"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "prisma": {
+    "schema": "src/server/prisma/schema.prisma"
   }
 }
