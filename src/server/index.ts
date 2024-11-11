@@ -7,8 +7,8 @@ import { PrismaD1 } from "@prisma/adapter-d1";
 import { createPrismaClient } from "@/server/db";
 // Cloudflare
 import { getRequestContext } from "@cloudflare/next-on-pages";
-
-import { auth } from "@/server/auth";
+// Auth
+import { currentUser, auth } from "@clerk/nextjs/server";
 // Types
 import { Env } from "@/server/types";
 // Private Routes
@@ -17,20 +17,22 @@ import todos from "./routes/todos";
 const app = new Hono<Env>().basePath("/api/v1");
 
 const AuthMiddleware = createMiddleware<Env>(async (c, next) => {
-  const session = await auth();
+  const { userId } = await auth();
 
-  if (!session) {
+  if (!userId) {
     return c.json("Unauthorized", 401);
   }
 
-  if (!session) {
+  const user = await currentUser();
+
+  if (!user) {
     return c.json("User not found", 404);
   }
 
   const adapter = new PrismaD1(getRequestContext().env.DB);
   const prisma = createPrismaClient(adapter);
 
-  c.set("session", session);
+  c.set("user", user);
   c.set("prisma", prisma);
 
   await next();

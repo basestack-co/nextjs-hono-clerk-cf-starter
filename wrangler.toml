@@ -8,5 +8,5 @@ pages_build_output_dir = ".vercel/output/static"
 [[d1_databases]]
 binding = "DB"
 database_name = "demo-hono-next-db"
-database_id = "2722590c-80fc-40cc-976a-60c4b3f82248"
+database_id = "" # Set a database ID
 migrations_dir = "src/server/migrations"

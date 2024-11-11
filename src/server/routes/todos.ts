@@ -7,7 +7,7 @@ import { zValidator } from "@hono/zod-validator";
 
 const todosRoutes = new Hono<Env>()
   .get("/", async (c) => {
-    const userId = c.var.session?.user?.id!;
+    const userId = c.var.user.id;
 
     const todos = await c.var.prisma.todo.findMany({
       where: {
@@ -33,7 +33,7 @@ const todosRoutes = new Hono<Env>()
     ),
     async (c) => {
       const data = c.req.valid("json");
-      const userId = c.var.session?.user?.id!;
+      const userId = c.var.user.id;
 
       const todo = await c.var.prisma.todo.create({
         data: {
@@ -46,7 +46,7 @@ const todosRoutes = new Hono<Env>()
     },
   )
   .get("/:id", async (c) => {
-    const userId = c.var.session?.user?.id!;
+    const userId = c.var.user.id;
     const todoId = c.req.param("id");
 
     const todo = await c.var.prisma.todo.findFirst({
@@ -69,7 +69,7 @@ const todosRoutes = new Hono<Env>()
     async (c) => {
       const todoId = c.req.param("id");
       const data = c.req.valid("json");
-      const userId = c.var.session?.user?.id!;
+      const userId = c.var.user.id;
 
       const todo = await c.var.prisma.todo.update({
         where: {
@@ -84,7 +84,7 @@ const todosRoutes = new Hono<Env>()
   )
   .delete("/:id", async (c) => {
     const todoId = c.req.param("id");
-    const userId = c.var.session?.user?.id!;
+    const userId = c.var.user.id;
 
     const todo = await c.var.prisma.todo.delete({
       where: {

@@ -2,11 +2,11 @@
 import { privateRoutes, publicRoutes } from "@/server";
 // Types
 import { CreatePrismaClient } from "@/server/db";
-import { Session } from "next-auth";
+import { User } from "@clerk/nextjs/server";
 
 export type Variables = {
   prisma: CreatePrismaClient;
-  session: Session;
+  user: User;
 };
 
 export type Env = {

@@ -20,13 +20,13 @@
     "deploy:local": "npm run prisma:generate && npm run db:migrate:apply:remote && npm run pages:build && wrangler pages deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv env.d.ts",
     "prisma:generate": "prisma generate --schema=src/server/prisma/schema.prisma",
-    "db:migrate:create": "npx wrangler d1 migrations create demo-hono-next-db $npm_config_file_name",
+    "db:migrate:create": "npx wrangler d1 migrations create $npm_config_db_name $npm_config_file_name",
     "db:migrate:generate": "prisma migrate diff --from-empty --to-schema-datamodel src/server/prisma/schema.prisma --script --output src/server/migrations/$npm_config_migration_file_name",
-    "db:migrate:apply:local": "npx wrangler d1 migrations apply demo-hono-next-db --local",
-    "db:migrate:apply:remote": "npx wrangler d1 migrations apply demo-hono-next-db --remote"
+    "db:migrate:apply:local": "npx wrangler d1 migrations apply $npm_config_db_name --local",
+    "db:migrate:apply:remote": "npx wrangler d1 migrations apply $npm_config_db_name --remote"
   },
   "dependencies": {
-    "@auth/d1-adapter": "^1.7.3",
+    "@clerk/nextjs": "^6.3.1",
     "@hono/zod-validator": "^0.4.1",
     "@prisma/adapter-d1": "^5.22.0",
     "@prisma/client": "^5.22.0",
@@ -40,7 +40,6 @@
     "hono": "^4.6.9",
     "lucide-react": "^0.454.0",
     "next": "14.2.5",
-    "next-auth": "^5.0.0-beta.25",
     "react": "^18",
     "react-dom": "^18",
     "tailwind-merge": "^2.5.4",

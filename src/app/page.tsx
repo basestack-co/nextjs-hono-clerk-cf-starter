@@ -10,15 +10,16 @@ import { Skeleton } from "@/components/Skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/Avatar";
 // Icons
 import { Trash2, ClipboardList, Github, LogOut } from "lucide-react";
+// Auth
+import { useAuth, useSession } from "@clerk/nextjs";
 // Hooks
 import api from "@/hooks/client/api";
-// Auth
-import { signIn, signOut, useSession } from "next-auth/react";
 // Utils
 import { v4 as uuidv4 } from "uuid";
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { session } = useSession();
+  const { signOut, isLoaded } = useAuth();
 
   const { data, isLoading, refetch } = api.todos.useAllQuery(undefined, {
     enabled: true,
@@ -158,25 +159,25 @@ export default function Home() {
       <header className="bg-white shadow">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-bold text-gray-900">TODOs App</h1>
-          {session?.user?.name}
+          {session?.user?.firstName}
 
           {session?.user && (
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Avatar>
                   <AvatarImage
-                    src={session?.user.image ?? ""}
-                    alt={session?.user.name ?? ""}
+                    src={session?.user.imageUrl ?? ""}
+                    alt={session?.user.firstName ?? ""}
                   />
                   <AvatarFallback>
-                    {(session?.user.name ?? "")
+                    {(session?.user.firstName ?? "")
                       .split(" ")
                       .map((n) => n[0])
                       .join("")}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium text-gray-700">
-                  {session?.user.name}
+                  {session?.user.firstName}
                 </span>
               </div>
               <Button size="sm" onClick={() => signOut()}>
@@ -189,7 +190,7 @@ export default function Home() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {!session?.user ? (
+        {!session?.user && isLoaded ? (
           <Card className="mx-auto max-w-md">
             <CardContent className="flex flex-col items-center justify-center p-12 pt-6 text-center">
               <ClipboardList className="mb-4 h-12 w-12 text-gray-400" />
@@ -199,10 +200,7 @@ export default function Home() {
               <p className="mb-6 text-sm text-gray-600">
                 Sign in to see your todos and create new ones.
               </p>
-              <Button
-                onClick={() => signIn("github")}
-                className="flex items-center"
-              >
+              <Button onClick={() => signOut()} className="flex items-center">
                 <Github className="mr-2 h-4 w-4" />
                 Sign in with GitHub
               </Button>
