@@ -7,19 +7,18 @@ import { Card, CardContent } from "@/components/Card";
 import { Checkbox } from "@/components/Checkbox";
 import { Input } from "@/components/Input";
 import { Skeleton } from "@/components/Skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/Avatar";
 // Icons
-import { Trash2, ClipboardList } from "lucide-react";
-// Auth
-import { useAuth } from "@clerk/nextjs";
+import { Trash2, ClipboardList, Github, LogOut } from "lucide-react";
 // Hooks
 import api from "@/hooks/client/api";
 // Auth
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { signIn, signOut, useSession } from "next-auth/react";
 // Utils
 import { v4 as uuidv4 } from "uuid";
 
 export default function Home() {
-  const { isLoaded, userId } = useAuth();
+  const { data: session } = useSession();
 
   const { data, isLoading, refetch } = api.todos.useAllQuery(undefined, {
     enabled: true,
@@ -53,16 +52,15 @@ export default function Home() {
     isLoading || isCreatePending || isDeletePending || isUpdatePending;
 
   const oAddTodo = useCallback(() => {
-    if (title.trim() !== "" && userId) {
+    if (title.trim() !== "") {
       createTodoMutate({
         id: uuidv4(),
-        userId,
         title,
         description: "New task description",
         completed: false,
       });
     }
-  }, [createTodoMutate, userId, title]);
+  }, [createTodoMutate, title]);
 
   const onToggleTodo = useCallback(
     (id: string, completed: boolean) => {
@@ -155,43 +153,83 @@ export default function Home() {
     );
   }, [isLoading, data, onDeleteTodo, onToggleTodo]);
 
-  if (!isLoaded || !userId) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <h1 className="text-2xl font-bold text-gray-900">TODOs App</h1>
-          <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+          {session?.user?.name}
+
+          {session?.user && (
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Avatar>
+                  <AvatarImage
+                    src={session?.user.image ?? ""}
+                    alt={session?.user.name ?? ""}
+                  />
+                  <AvatarFallback>
+                    {(session?.user.name ?? "")
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium text-gray-700">
+                  {session?.user.name}
+                </span>
+              </div>
+              <Button size="sm" onClick={() => signOut()}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign out
+              </Button>
+            </div>
+          )}
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex space-x-2">
-              <Input
-                type="text"
-                placeholder="Add a new TODO"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="flex-grow"
-                disabled={isDisabled}
-              />
-              <Button onClick={oAddTodo} disabled={isDisabled}>
-                Add TODO
+        {!session?.user ? (
+          <Card className="mx-auto max-w-md">
+            <CardContent className="flex flex-col items-center justify-center p-12 pt-6 text-center">
+              <ClipboardList className="mb-4 h-12 w-12 text-gray-400" />
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">
+                Welcome to TODOs App
+              </h3>
+              <p className="mb-6 text-sm text-gray-600">
+                Sign in to see your todos and create new ones.
+              </p>
+              <Button
+                onClick={() => signIn("github")}
+                className="flex items-center"
+              >
+                <Github className="mr-2 h-4 w-4" />
+                Sign in with GitHub
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-        {onRenderContent()}
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <Card className="mb-8">
+              <CardContent className="pt-6">
+                <div className="flex space-x-2">
+                  <Input
+                    type="text"
+                    placeholder="Add a new TODO"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="flex-grow"
+                    disabled={isDisabled}
+                  />
+                  <Button onClick={oAddTodo} disabled={isDisabled}>
+                    Add TODO
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            {onRenderContent()}
+          </>
+        )}
       </main>
     </div>
   );

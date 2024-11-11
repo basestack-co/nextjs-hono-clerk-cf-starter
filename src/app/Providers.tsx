@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+// Auth
+import { SessionProvider } from "next-auth/react";
 // Utils
 import {
   isServer,
@@ -40,8 +42,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ReactQueryStreamedHydration>{children}</ReactQueryStreamedHydration>
-    </QueryClientProvider>
+    <SessionProvider>
+      <QueryClientProvider client={queryClient}>
+        <ReactQueryStreamedHydration>{children}</ReactQueryStreamedHydration>
+      </QueryClientProvider>
+    </SessionProvider>
   );
 }
